@@ -1,0 +1,43 @@
+# 🛑 Virtual Environment
+tf_env/
+venv/
+
+# 🛑 Python Compiled Files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 🛑 Environment Variables
+.env
+config.json
+credentials.json
+
+# 🛑 Log and Cache Files
+*.log
+logs/
+*.cache
+
+# 🛑 TensorFlow & ML Model Files
+models/
+*.h5
+*.pb
+*.tflite
+*.onnx
+*.pth
+*.pt
+*.joblib
+*.pickle
+*.pkl
+
+# 🛑 Jupyter Notebook Checkpoints (if used)
+.ipynb_checkpoints/
+
+# 🛑 System-Specific Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+datasets/
+test_images/
