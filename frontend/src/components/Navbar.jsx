@@ -1,52 +1,42 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React from "react";
+import { Link } from "react-router-dom";
+import { useUser, SignInButton, SignOutButton } from "@clerk/clerk-react";
 
 const Navbar = () => {
+  const { isSignedIn } = useUser();
 
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+  return (
+    <nav className="bg-gray-800 p-4 flex justify-between">
+      <Link className="text-white text-lg font-bold" to="/">Home</Link>
 
-    useEffect(() => {
-        const userLoggedIn = localStorage.getItem('isLoggedIn');
-        if (userLoggedIn === 'true') {
-            setIsLoggedIn(true);
-        }
-    }, []);
+      <div className="flex space-x-4">
+        {/* Show "Preview" only if the user is logged in */}
+        {isSignedIn && (
+          <Link className="text-sm px-4 py-2 leading-none rounded-full hover:bg-gray-700 text-white" to="/preview">
+            Preview
+          </Link>
+        )}
 
-    const handleLogout = () => {
-        localStorage.setItem('isLoggedIn', 'false');
-        setIsLoggedIn(false);
-        window.location.href = '/';
-    };
+        {/* Show SignInButton if user is NOT logged in */}
+        {!isSignedIn && (
+          <SignInButton mode="modal">
+            <button className="text-sm px-4 py-2 leading-none rounded-full bg-blue-600 hover:bg-blue-700 text-white">
+              Login
+            </button>
+          </SignInButton>
+        )}
 
-    return (
-        <nav className="bg-gray-800 text-white py-3 px-4 flex items-center justify-between">
-            <Link className="font-bold text-xl tracking-tight ml-5" to="/">Digital Farming</Link>
-            <div className="flex items-center">
-                <Link className="text-sm px-4 py-2 leading-none rounded-full hover:bg-gray-700" to="/">Home</Link>
-                {isLoggedIn ? (
-                    <>
-                        <Link className="text-sm px-4 py-2 leading-none rounded-full hover:bg-gray-700" to="/preview">Preview</Link>
-                        <Link className="text-sm px-4 py-2 leading-none rounded-full hover:bg-gray-700" to="/graph">Graph</Link>
-                        <Link className="text-sm px-4 py-2 leading-none rounded-full hover:bg-gray-700" to="/chart">Chart</Link>
-                        <button
-                            onClick={handleLogout}
-                            className="text-sm px-4 py-2 leading-none rounded-full hover:bg-gray-700"
-                        >
-                            Logout
-                        </button>
-
-                    </>
-                ) : (
-                    <>
-                        <Link className="text-sm px-4 py-2 leading-none rounded-full hover:bg-gray-700" to="/login">Login</Link>
-                        <Link className="text-sm px-4 py-2 leading-none rounded-full hover:bg-gray-700" to="/signup">Sign Up</Link>
-
-
-                    </>
-                )}
-            </div>
-        </nav>
-    );
+        {/* Show SignOutButton if user is logged in */}
+        {isSignedIn && (
+          <SignOutButton>
+            <button className="text-sm px-4 py-2 leading-none rounded-full bg-red-600 hover:bg-red-700 text-white">
+              Logout
+            </button>
+          </SignOutButton>
+        )}
+      </div>
+    </nav>
+  );
 };
 
 export default Navbar;

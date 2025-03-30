@@ -1,6 +1,10 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import React, { useState } from "react";
 
+const ai = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
+
 const CropRecommendation = () => {
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     Moist: "132",
     Capacitity_Moist: "1123",
@@ -28,35 +32,55 @@ const CropRecommendation = () => {
   });
 
   const [prediction, setPrediction] = useState(null);
+  const [aiSuggestion, setAiSuggestion] = useState("");
 
-  // Handle input change
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Handle form submission
   const handleRecommendation = async (e) => {
     e.preventDefault();
 
     try {
+      setLoading(true);
       const response = await fetch("http://127.0.0.1:8000/predict/", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) {
-        console.log(response);
-        throw new Error("Failed to fetch prediction");
-      }
+      if (!response.ok) throw new Error("Failed to fetch prediction");
 
       const data = await response.json();
-      console.log("Prediction:", data);
       setPrediction(data);
+      const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const aiResponse = await model.generateContent({
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: `Based on the following soil data, suggest the best crop to cultivate. Provide a detailed, point-wise recommendation covering key aspects:
+
+                - **Moisture Level:** ${formData.Moist}
+                - **Soil pH Level:** ${formData.Ph}
+                - **Electrical Conductivity (EC):** ${formData.EC}
+                - **Nitrogen Level:** ${data.Nitrogen || "Unknown"}
+                - **Phosphorus Level:** ${data.Phosphorus || "Unknown"}
+                - **Potassium Level:** ${data.Potassium || "Unknown"}
+                `,
+              },
+            ],
+          },
+        ],
+      });
+
+      const aiText = aiResponse.response.text();
+      setAiSuggestion(aiText);
     } catch (error) {
       console.error("Error:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -102,25 +126,51 @@ const CropRecommendation = () => {
           <div className="grid grid-cols-3 gap-4">
             <div className="p-3 bg-white rounded shadow">
               <p className="font-medium">Nitrogen:</p>
-              <p>{prediction.Nitrogen}</p>
+              <p>{parseFloat(prediction.Nitrogen).toFixed(2)}</p>
             </div>
             <div className="p-3 bg-white rounded shadow">
               <p className="font-medium">Phosphorus:</p>
-              <p>{prediction.Phosphorus}</p>
+              <p>{parseFloat(prediction.Phosphorus).toFixed(2)}</p>
             </div>
             <div className="p-3 bg-white rounded shadow">
               <p className="font-medium">Potassium:</p>
-              <p>{prediction.Potassium}</p>
+              <p>{parseFloat(prediction.Potassium).toFixed(2)}</p>
             </div>
-            {prediction.recommendedCrop && (
-              <div className="p-3 bg-white rounded shadow col-span-3">
-                <p className="font-medium">Recommended Crop:</p>
-                <p>{prediction.recommendedCrop}</p>
-              </div>
-            )}
           </div>
         </div>
       )}
+
+      <div className="mt-8 p-6 bg-gray-50 rounded-lg border border-gray-300">
+        <div className="whitespace-pre-line text-gray-700 leading-7">
+          {loading ? (
+            <div className="text-xl text-red-600 font-semibold">
+              Generating Suggestions
+            </div>
+          ) : (
+            <>
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                🌱 AI-Generated Crop Recommendation:
+              </h2>
+              {aiSuggestion.split("\n").map((line, index) => {
+                const parts = line.split("**");
+                return (
+                  <p key={index}>
+                    {parts.map((part, i) =>
+                      i % 2 === 1 ? (
+                        <span key={i} className="font-semibold text-green-700">
+                          {part}
+                        </span>
+                      ) : (
+                        <span key={i}>{part}</span>
+                      )
+                    )}
+                  </p>
+                );
+              })}
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

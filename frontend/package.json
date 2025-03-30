@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@clerk/clerk-react": "^5.25.5",
+    "@google/generative-ai": "^0.24.0",
     "@tailwindcss/vite": "^4.0.17",
     "axios": "^1.8.4",
     "react": "^19.0.0",
