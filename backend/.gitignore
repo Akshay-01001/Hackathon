@@ -18,18 +18,6 @@ credentials.json
 logs/
 *.cache
 
-# 🛑 TensorFlow & ML Model Files
-models/
-*.h5
-*.pb
-*.tflite
-*.onnx
-*.pth
-*.pt
-*.joblib
-*.pickle
-*.pkl
-
 # 🛑 Jupyter Notebook Checkpoints (if used)
 .ipynb_checkpoints/
 
@@ -38,6 +26,3 @@ models/
 Thumbs.db
 .vscode/
 .idea/
-
-datasets/
-test_images/

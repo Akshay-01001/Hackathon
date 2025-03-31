@@ -9,7 +9,7 @@ import CropRecommendation from "./components/Preview";
 
 function ProtectedRoute({ children }) {
   const { isSignedIn } = useUser();
-  return isSignedIn ? children : <Navigate to="/login" />;
+  return isSignedIn ? children : <Navigate to="/" />;
 }
 
 function App() {

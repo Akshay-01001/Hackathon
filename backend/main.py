@@ -1,37 +1,29 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
 import joblib
 import numpy as np
+from fastapi import FastAPI
+from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
-
-# origins = [
-#     "http://localhost:5173",  # Vite Dev Server
-#     "http://127.0.0.1:5173",  # Alternative local address
-# ]
-
-# Load the trained model
-model = joblib.load("soil_random_forest.pkl")
+# Load trained model and scaler
+model = joblib.load("soil.pkl")
+scaler = joblib.load("scaler.pkl")
 
 # Define FastAPI app
 app = FastAPI()
 
-# Add CORS middleware
+# Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allowed origins
-    allow_credentials=True,  # Allow cookies (if needed)
-    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, PUT, DELETE)
-    allow_headers=["*"],  # Allow all headers
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# Input schema
+# Define input schema
 class SoilSample(BaseModel):
-    Moist: float
     Capacitity_Moist: float
     Temp: float
-    Ph: float
-    EC: float
     nm_410: float
     nm_435: float
     nm_460: float
@@ -51,22 +43,37 @@ class SoilSample(BaseModel):
     nm_900: float
     nm_940: float
 
-@app.post("/predict")
-def predict_nutrients(sample: SoilSample):
-    # Convert input data to NumPy array in the correct order
-    input_features = np.array([
-        sample.Moist, sample.Capacitity_Moist, sample.Temp, sample.Ph, sample.EC,
-        sample.nm_410, sample.nm_435, sample.nm_460, sample.nm_485, sample.nm_510,
-        sample.nm_535, sample.nm_560, sample.nm_585, sample.nm_610, sample.nm_645,
-        sample.nm_680, sample.nm_705, sample.nm_730, sample.nm_760, sample.nm_810,
-        sample.nm_860, sample.nm_900, sample.nm_940
-    ]).reshape(1, -1)  # Reshape for prediction
+# Define output schema
+class PredictionResult(BaseModel):
+    Nitrogen: float
+    Phosphorus: float
+    Potassium: float
+    Moisture: float
+    Ph: float
+    Electronic_Conductivity: float
 
-    # Predict nutrient levels
-    prediction = model.predict(input_features)[0]
+@app.post("/predict", response_model=PredictionResult)
+async def predict_nutrients(sample: SoilSample):
+    # Convert input data to NumPy array
+    input_features = np.array([
+        sample.Capacitity_Moist, sample.Temp, sample.nm_410, sample.nm_435,
+        sample.nm_460, sample.nm_485, sample.nm_510, sample.nm_535,
+        sample.nm_560, sample.nm_585, sample.nm_610, sample.nm_645,
+        sample.nm_680, sample.nm_705, sample.nm_730, sample.nm_760,
+        sample.nm_810, sample.nm_860, sample.nm_900, sample.nm_940
+    ]).reshape(1, -1)
+
+    # Scale input features
+    input_scaled = scaler.transform(input_features)
+
+    # Make prediction
+    prediction = model.predict(input_scaled)[0]
 
     return {
-        "Nitrogen": prediction[0],
-        "Phosphorus": prediction[1],
-        "Potassium": prediction[2]
+        "Nitrogen": float(prediction[0]),
+        "Phosphorus": float(prediction[1]),
+        "Potassium": float(prediction[2]),
+        "Moisture": float(prediction[3]),
+        "Ph": float(prediction[4]),
+        "Electronic_Conductivity": float(prediction[5])
     }

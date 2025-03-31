@@ -6,29 +6,26 @@ const ai = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 const CropRecommendation = () => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    Moist: "132",
-    Capacitity_Moist: "1123",
-    Temp: "234",
-    Ph: "5.2",
-    EC: "3424",
-    nm_410: "131",
-    nm_435: "232",
-    nm_460: "532",
-    nm_485: "234",
-    nm_510: "345",
-    nm_535: "454",
-    nm_560: "454",
-    nm_585: "533",
-    nm_610: "355",
-    nm_645: "454",
-    nm_680: "455",
-    nm_705: "453",
-    nm_730: "355",
-    nm_760: "655",
-    nm_810: "456",
-    nm_860: "564",
-    nm_900: "456",
-    nm_940: "232",
+    Capacitity_Moist: "",
+    Temp: "",
+    nm_410: "",
+    nm_435: "",
+    nm_460: "",
+    nm_485: "",
+    nm_510: "",
+    nm_535: "",
+    nm_560: "",
+    nm_585: "",
+    nm_610: "",
+    nm_645: "",
+    nm_680: "",
+    nm_705: "",
+    nm_730: "",
+    nm_760: "",
+    nm_810: "",
+    nm_860: "",
+    nm_900: "",
+    nm_940: "",
   });
 
   const [prediction, setPrediction] = useState(null);
@@ -48,10 +45,13 @@ const CropRecommendation = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
+      console.log(response);
+      
 
       if (!response.ok) throw new Error("Failed to fetch prediction");
 
       const data = await response.json();
+      console.log(data);
       setPrediction(data);
       const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
       const aiResponse = await model.generateContent({
@@ -62,9 +62,9 @@ const CropRecommendation = () => {
               {
                 text: `Based on the following soil data, suggest the best crop to cultivate. Provide a detailed, point-wise recommendation covering key aspects:
 
-                - **Moisture Level:** ${formData.Moist}
-                - **Soil pH Level:** ${formData.Ph}
-                - **Electrical Conductivity (EC):** ${formData.EC}
+                - **Moisture Level:** ${data.Moisture || "Moisture"}
+                - **Soil pH Level:** ${data.Ph || "Ph"}
+                - **Electrical Conductivity (EC):** ${data.Electronic_Conductivity || "Unknown"}
                 - **Nitrogen Level:** ${data.Nitrogen || "Unknown"}
                 - **Phosphorus Level:** ${data.Phosphorus || "Unknown"}
                 - **Potassium Level:** ${data.Potassium || "Unknown"}
@@ -135,6 +135,18 @@ const CropRecommendation = () => {
             <div className="p-3 bg-white rounded shadow">
               <p className="font-medium">Potassium:</p>
               <p>{parseFloat(prediction.Potassium).toFixed(2)}</p>
+            </div>
+            <div className="p-3 bg-white rounded shadow">
+              <p className="font-medium">Electronic Conductivity:</p>
+              <p>{parseFloat(prediction.Electronic_Conductivity).toFixed(2)}</p>
+            </div>
+            <div className="p-3 bg-white rounded shadow">
+              <p className="font-medium">Moisture:</p>
+              <p>{parseFloat(prediction.Moisture).toFixed(2)}</p>
+            </div>
+            <div className="p-3 bg-white rounded shadow">
+              <p className="font-medium">PH:</p>
+              <p>{parseFloat(prediction.Ph).toFixed(2)}</p>
             </div>
           </div>
         </div>
